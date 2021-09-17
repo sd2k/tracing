@@ -8,9 +8,6 @@
 //!
 //! [`layer` module's documentation]: crate::layer#filtering-with-layers
 //! [`Layer`]: crate::layer
-#[cfg(feature = "registry")]
-#[cfg_attr(docsrs, doc(cfg(feature = "registry")))]
-pub mod combinator;
 mod directive;
 #[cfg(feature = "env-filter")]
 mod env;
