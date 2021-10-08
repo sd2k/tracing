@@ -366,9 +366,16 @@ where
 
     fn record_debug(&mut self, field: &Field, value: &dyn fmt::Debug) {
         if self.state.is_ok() {
-            self.state = self
-                .serializer
-                .serialize_entry(field.name(), &format_args!("{:?}", value))
+            let name = field.name();
+            if name == "message" {
+                self.state = self
+                    .serializer
+                    .serialize_entry("@message", &format_args!("{:?}", value))
+            } else {
+                self.state = self
+                    .serializer
+                    .serialize_entry(name, &format_args!("{:?}", value))
+            }
         }
     }
 
@@ -392,7 +399,12 @@ where
 
     fn record_str(&mut self, field: &Field, value: &str) {
         if self.state.is_ok() {
-            self.state = self.serializer.serialize_entry(field.name(), &value)
+            let name = field.name();
+            self.state = if name == "message" {
+                self.serializer.serialize_entry("@message", &value)
+            } else {
+                self.serializer.serialize_entry(name, &value)
+            }
         }
     }
 }
@@ -418,9 +430,16 @@ where
 
     fn record_debug(&mut self, field: &Field, value: &dyn fmt::Debug) {
         if self.state.is_ok() {
-            self.state = self
-                .serializer
-                .serialize_field(field.name(), &format_args!("{:?}", value))
+            let name = field.name();
+            if name == "message" {
+                self.state = self
+                    .serializer
+                    .serialize_field("@message", &format_args!("{:?}", value))
+            } else {
+                self.state = self
+                    .serializer
+                    .serialize_field(name, &format_args!("{:?}", value))
+            }
         }
     }
 
@@ -444,7 +463,12 @@ where
 
     fn record_str(&mut self, field: &Field, value: &str) {
         if self.state.is_ok() {
-            self.state = self.serializer.serialize_field(field.name(), &value)
+            let name = field.name();
+            self.state = if name == "message" {
+                self.serializer.serialize_field("@message", &value)
+            } else {
+                self.serializer.serialize_field(name, &value)
+            }
         }
     }
 }

@@ -208,11 +208,11 @@ where
             let mut serializer = serializer.serialize_map(None)?;
 
             if self.display_timestamp {
-                serializer.serialize_entry("timestamp", &timestamp)?;
+                serializer.serialize_entry("@timestamp", &timestamp)?;
             }
 
             if self.display_level {
-                serializer.serialize_entry("level", &meta.level().as_serde())?;
+                serializer.serialize_entry("@level", &meta.level().as_serde())?;
             }
 
             let format_field_marker: std::marker::PhantomData<N> = std::marker::PhantomData;
@@ -541,7 +541,7 @@ mod test {
         }
 
         let expected =
-        "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+        "{\"@timestamp\":\"fake time\",\"@level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"@message\":\"some json test\"}}\n";
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(true)
@@ -560,7 +560,7 @@ mod test {
         }
 
         let expected =
-        "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"message\":\"some json test\"}\n";
+        "{\"@timestamp\":\"fake time\",\"@level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"@message\":\"some json test\"}\n";
         let subscriber = subscriber()
             .flatten_event(true)
             .with_current_span(true)
@@ -579,7 +579,7 @@ mod test {
         }
 
         let expected =
-        "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+        "{\"@timestamp\":\"fake time\",\"@level\":\"INFO\",\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"@message\":\"some json test\"}}\n";
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(false)
@@ -598,7 +598,7 @@ mod test {
         }
 
         let expected =
-        "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+        "{\"@timestamp\":\"fake time\",\"@level\":\"INFO\",\"span\":{\"answer\":42,\"name\":\"json_span\",\"number\":3},\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"@message\":\"some json test\"}}\n";
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(true)
@@ -617,7 +617,7 @@ mod test {
         }
 
         let expected =
-        "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"span\":{\"answer\":43,\"name\":\"nested_json_span\",\"number\":4},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3},{\"answer\":43,\"name\":\"nested_json_span\",\"number\":4}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+        "{\"@timestamp\":\"fake time\",\"@level\":\"INFO\",\"span\":{\"answer\":43,\"name\":\"nested_json_span\",\"number\":4},\"spans\":[{\"answer\":42,\"name\":\"json_span\",\"number\":3},{\"answer\":43,\"name\":\"nested_json_span\",\"number\":4}],\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"@message\":\"some json test\"}}\n";
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(true)
@@ -643,7 +643,7 @@ mod test {
         }
 
         let expected =
-        "{\"timestamp\":\"fake time\",\"level\":\"INFO\",\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"message\":\"some json test\"}}\n";
+        "{\"@timestamp\":\"fake time\",\"@level\":\"INFO\",\"target\":\"tracing_subscriber::fmt::format::json::test\",\"fields\":{\"@message\":\"some json test\"}}\n";
         let subscriber = subscriber()
             .flatten_event(false)
             .with_current_span(true)
@@ -667,7 +667,7 @@ mod test {
         with_default(subscriber, || {
             tracing::info!("an event outside the root span");
             assert_eq!(
-                parse_as_json(&buffer)["fields"]["message"],
+                parse_as_json(&buffer)["fields"]["@message"],
                 "an event outside the root span"
             );
 
@@ -677,7 +677,7 @@ mod test {
 
             tracing::info!("an event inside the root span");
             assert_eq!(
-                parse_as_json(&buffer)["fields"]["message"],
+                parse_as_json(&buffer)["fields"]["@message"],
                 "an event inside the root span"
             );
         });
@@ -703,43 +703,43 @@ mod test {
             let parent_span = tracing::info_span!("parent_span", context);
 
             let event = parse_as_json(&buffer);
-            assert_eq!(event["fields"]["message"], "new");
+            assert_eq!(event["fields"]["@message"], "new");
             assert_eq!(event["span"]["context"], "parent");
 
             let _parent_enter = parent_span.enter();
             let event = parse_as_json(&buffer);
-            assert_eq!(event["fields"]["message"], "enter");
+            assert_eq!(event["fields"]["@message"], "enter");
             assert_eq!(event["span"]["context"], "parent");
 
             let context = "child";
             let child_span = tracing::info_span!("child_span", context);
             let event = parse_as_json(&buffer);
-            assert_eq!(event["fields"]["message"], "new");
+            assert_eq!(event["fields"]["@message"], "new");
             assert_eq!(event["span"]["context"], "child");
 
             let _child_enter = child_span.enter();
             let event = parse_as_json(&buffer);
-            assert_eq!(event["fields"]["message"], "enter");
+            assert_eq!(event["fields"]["@message"], "enter");
             assert_eq!(event["span"]["context"], "child");
 
             drop(_child_enter);
             let event = parse_as_json(&buffer);
-            assert_eq!(event["fields"]["message"], "exit");
+            assert_eq!(event["fields"]["@message"], "exit");
             assert_eq!(event["span"]["context"], "child");
 
             drop(child_span);
             let event = parse_as_json(&buffer);
-            assert_eq!(event["fields"]["message"], "close");
+            assert_eq!(event["fields"]["@message"], "close");
             assert_eq!(event["span"]["context"], "child");
 
             drop(_parent_enter);
             let event = parse_as_json(&buffer);
-            assert_eq!(event["fields"]["message"], "exit");
+            assert_eq!(event["fields"]["@message"], "exit");
             assert_eq!(event["span"]["context"], "parent");
 
             drop(parent_span);
             let event = parse_as_json(&buffer);
-            assert_eq!(event["fields"]["message"], "close");
+            assert_eq!(event["fields"]["@message"], "close");
             assert_eq!(event["span"]["context"], "parent");
         });
     }
@@ -763,16 +763,16 @@ mod test {
 
         with_default(subscriber, || {
             let span = tracing::info_span!("valid_json");
-            assert_eq!(parse_as_json(&buffer)["fields"]["message"], "new");
+            assert_eq!(parse_as_json(&buffer)["fields"]["@message"], "new");
 
             let _enter = span.enter();
-            assert_eq!(parse_as_json(&buffer)["fields"]["message"], "enter");
+            assert_eq!(parse_as_json(&buffer)["fields"]["@message"], "enter");
 
             drop(_enter);
-            assert_eq!(parse_as_json(&buffer)["fields"]["message"], "exit");
+            assert_eq!(parse_as_json(&buffer)["fields"]["@message"], "exit");
 
             drop(span);
-            assert_eq!(parse_as_json(&buffer)["fields"]["message"], "close");
+            assert_eq!(parse_as_json(&buffer)["fields"]["@message"], "close");
         });
     }
 
